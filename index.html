@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta name="google-adsense-account" content="ca-pub-1665528297240550">
+
+    <script async 
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1665528297240550"
+        crossorigin="anonymous">
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lony Chat - Ultimate Local</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+        .chat-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .prose pre { background: #1e293b; padding: 1em; border-radius: 0.5em; overflow-x: auto; }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
+        .typing-indicator span {
+            height: 8px; width: 8px; background-color: #94a3b8; border-radius: 50%; display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-of-type(2) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-of-type(3) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .pulse-recording { animation: pulse-red 1.5s infinite; color: #ef4444; }
+        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex">
+
+    <aside id="sidebar" class="w-72 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 absolute z-30 h-full md:relative -translate-x-full md:translate-x-0">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Lony Chat</h1>
+            <button id="close-sidebar" class="md:hidden text-slate-400 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        
+        <div class="p-4 space-y-2">
+            <button id="new-chat-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                New Chat
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="export-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded border border-slate-700">Export JSON</button>
+                <button id="import-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded border border-slate-700">Import JSON</button>
+                <input type="file" id="import-file" class="hidden" accept=".json">
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-2 py-2 space-y-1" id="history-list">
+            </div>
+
+        <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+            <button id="settings-btn" class="w-full flex items-center gap-3 text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>Settings & API Key</span>
+            </button>
+             <button id="clear-data-btn" class="w-full flex items-center gap-3 text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-slate-800 transition mt-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Clear All Data</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col bg-slate-900 relative">
+        <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 p-4 flex items-center justify-between z-10">
+            <button id="open-sidebar" class="md:hidden text-slate-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+            <div class="text-center">
+                <h2 id="current-chat-title" class="text-lg font-semibold text-white">New Chat</h2>
+                <div id="model-badge" class="text-xs text-indigo-400 font-mono">Gemini 2.5 Flash</div>
+            </div>
+            <div class="w-6"></div>
+        </header>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth">
+            <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center p-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                </div>
+                <h2 class="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+                <p class="text-slate-400 mb-8 max-w-md">Your fully featured, private AI assistant. Now with restored Voice, Image Generation, and Export capabilities.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg text-left">
+                    <button class="welcome-prompt bg-slate-800/50 hover:bg-slate-800 p-4 rounded-xl border border-slate-700/50 transition group">
+                        <span class="block text-indigo-400 text-sm font-semibold mb-1 group-hover:text-indigo-300">Generate Image</span>
+                        <span class="text-slate-300 text-sm">Create a cyberpunk city with neon lights.</span>
+                    </button>
+                    <button class="welcome-prompt bg-slate-800/50 hover:bg-slate-800 p-4 rounded-xl border border-slate-700/50 transition group">
+                        <span class="block text-indigo-400 text-sm font-semibold mb-1 group-hover:text-indigo-300">Code Helper</span>
+                        <span class="text-slate-300 text-sm">Write a Python script to scrape a website.</span>
+                    </button>
+                </div>
+            </div>
+            </div>
+
+        <div class="p-4 bg-slate-900 border-t border-slate-800">
+             <div id="image-preview-container" class="hidden mb-3 relative w-fit group">
+                <img id="image-preview" class="h-24 w-24 object-cover rounded-lg border-2 border-indigo-500/50">
+                <button id="remove-image" class="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white hover:bg-red-600 shadow-sm"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+
+            <div class="flex items-end gap-2 bg-slate-800/80 p-2 rounded-2xl border border-slate-700 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all shadow-lg">
+                
+                <button id="upload-btn" class="p-2.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-colors" title="Analyze Image">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </button>
+                <input type="file" id="file-input" class="hidden" accept="image/*">
+
+                <button id="gen-img-btn" class="p-2.5 text-slate-400 hover:text-pink-400 hover:bg-slate-700 rounded-xl transition-colors" title="Generate Image from Text">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </button>
+                
+                <textarea id="user-input" rows="1" class="flex-1 bg-transparent border-none focus:ring-0 text-white resize-none py-3 px-2 max-h-32 placeholder-slate-500" placeholder="Type a message..."></textarea>
+                
+                <button id="voice-btn" class="p-2.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-colors" title="Voice Chat">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                </button>
+
+                <button id="send-btn" class="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </button>
+            </div>
+             <p class="text-[10px] text-center text-slate-600 mt-2 font-mono">Local Storage Mode • Gemini 2.5</p>
+        </div>
+    </main>
+
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-backdrop">
+        <div class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 border border-slate-700">
+            <h2 class="text-xl font-bold mb-4 text-white">Settings</h2>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Gemini API Key <span class="text-red-400">*</span></label>
+                <input type="password" id="api-key-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition" placeholder="Paste AIza... key here">
+                <p class="text-xs text-slate-500 mt-2">Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-400 hover:underline">Google AI Studio</a>.</p>
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-slate-300 mb-2">AI Model</label>
+                <select id="model-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fastest)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
+                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Experimental)</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                 <label class="block text-sm font-medium text-slate-300 mb-2">System Prompt</label>
+                <textarea id="system-prompt" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none h-24 resize-none" placeholder="e.g. You are a helpful coding assistant."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-700">
+                <button id="close-settings" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition">Cancel</button>
+                <button id="save-settings" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg shadow-indigo-500/20 transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- STATE & CONFIG ---
+        const State = {
+            apiKey: localStorage.getItem('lony_api_key') || '',
+            chats: JSON.parse(localStorage.getItem('lony_chats') || '[]'),
+            currentChatId: null,
+            systemPrompt: localStorage.getItem('lony_system_prompt') || '',
+            modelId: localStorage.getItem('lony_model_id') || 'gemini-2.5-flash',
+            uploadedImage: null,
+            isRecording: false
+        };
+
+        // --- DOM ELEMENTS ---
+        const $ = (id) => document.getElementById(id);
+        const els = {
+            input: $('user-input'),
+            sendBtn: $('send-btn'),
+            genImgBtn: $('gen-img-btn'),
+            voiceBtn: $('voice-btn'),
+            chatContainer: $('chat-container'),
+            historyList: $('history-list'),
+            newChatBtn: $('new-chat-btn'),
+            settingsBtn: $('settings-btn'),
+            settingsModal: $('settings-modal'),
+            apiKeyInput: $('api-key-input'),
+            modelSelect: $('model-select'),
+            sysPromptInput: $('system-prompt'),
+            saveSettingsBtn: $('save-settings'),
+            closeSettingsBtn: $('close-settings'),
+            welcomeScreen: $('welcome-screen'),
+            chatTitle: $('current-chat-title'),
+            sidebar: $('sidebar'),
+            openSidebar: $('open-sidebar'),
+            closeSidebar: $('close-sidebar'),
+            fileInput: $('file-input'),
+            uploadBtn: $('upload-btn'),
+            imgPreview: $('image-preview'),
+            imgPreviewContainer: $('image-preview-container'),
+            removeImgBtn: $('remove-image'),
+            clearDataBtn: $('clear-data-btn'),
+            exportBtn: $('export-btn'),
+            importBtn: $('import-btn'),
+            importFile: $('import-file'),
+            modelBadge: $('model-badge')
+        };
+
+        // --- SPEECH RECOGNITION SETUP ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if(SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.onresult = (e) => {
+                els.input.value = e.results[0][0].transcript;
+                sendMessage(false); // Auto send? Let's user review.
+            };
+            recognition.onend = () => {
+                State.isRecording = false;
+                els.voiceBtn.classList.remove('pulse-recording');
+            };
+        }
+
+        // --- INITIALIZATION ---
+        function init() {
+            renderHistory();
+            els.modelBadge.textContent = State.modelId;
+            
+            // Listeners
+            els.sendBtn.onclick = () => sendMessage(false);
+            els.input.onkeydown = (e) => { 
+                if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(false); } 
+                resizeInput();
+            };
+            
+            // Image Generation Button
+            els.genImgBtn.onclick = () => {
+                const prompt = els.input.value.trim();
+                if(!prompt) return alert("Please type a description for the image first.");
+                sendMessage(true); // true = force image generation
+            };
+
+            // Voice
+            els.voiceBtn.onclick = toggleVoice;
+
+            // New Chat
+            els.newChatBtn.onclick = () => loadChat(null);
+
+            // Settings
+            els.settingsBtn.onclick = () => {
+                els.apiKeyInput.value = State.apiKey;
+                els.sysPromptInput.value = State.systemPrompt;
+                els.modelSelect.value = State.modelId;
+                els.settingsModal.classList.remove('hidden');
+            };
+            els.closeSettingsBtn.onclick = () => els.settingsModal.classList.add('hidden');
+            els.saveSettingsBtn.onclick = () => {
+                State.apiKey = els.apiKeyInput.value.trim();
+                State.systemPrompt = els.sysPromptInput.value.trim();
+                State.modelId = els.modelSelect.value;
+                localStorage.setItem('lony_api_key', State.apiKey);
+                localStorage.setItem('lony_system_prompt', State.systemPrompt);
+                localStorage.setItem('lony_model_id', State.modelId);
+                els.modelBadge.textContent = State.modelId;
+                els.settingsModal.classList.add('hidden');
+                if(State.apiKey) alert("Settings Saved!");
+            };
+
+            // Image Upload
+            els.uploadBtn.onclick = () => els.fileInput.click();
+            els.fileInput.onchange = handleFileUpload;
+            els.removeImgBtn.onclick = clearUpload;
+
+            // Sidebar
+            els.openSidebar.onclick = () => els.sidebar.classList.remove('-translate-x-full');
+            els.closeSidebar.onclick = () => els.sidebar.classList.add('-translate-x-full');
+
+            // Data
+            els.clearDataBtn.onclick = () => {
+                if(confirm("Delete all history and keys?")) { localStorage.clear(); location.reload(); }
+            };
+            els.exportBtn.onclick = exportChats;
+            els.importBtn.onclick = () => els.importFile.click();
+            els.importFile.onchange = importChats;
+
+            // Welcome Prompts
+            document.querySelectorAll('.welcome-prompt').forEach(btn => {
+                btn.onclick = () => {
+                    els.input.value = btn.querySelector('span:last-child').innerText;
+                    if(btn.innerText.includes('Image')) sendMessage(true);
+                    else sendMessage(false);
+                }
+            });
+
+            // Check Key
+            if(!State.apiKey) els.settingsModal.classList.remove('hidden');
+        }
+
+        // --- CORE LOGIC ---
+        async function sendMessage(forceImage = false) {
+            const text = els.input.value.trim();
+            if(!text && !State.uploadedImage) return;
+            if(!State.apiKey) return alert("API Key missing. Check Settings.");
+
+            els.input.value = '';
+            resizeInput();
+            els.welcomeScreen.classList.add('hidden');
+            if(!State.currentChatId) createNewChat();
+
+            // 1. User Message
+            const userMsg = { 
+                role: 'user', 
+                content: text, 
+                image: State.uploadedImage, // Store attached image
+                timestamp: Date.now() 
+            };
+            addMessage(userMsg);
+            renderMessage(userMsg);
+            
+            // Clear upload
+            const imgToSend = State.uploadedImage;
+            clearUpload();
+
+            // 2. Loading
+            const loadId = showLoading();
+
+            try {
+                let responseText = "";
+                let type = "text";
+
+                if (forceImage || text.toLowerCase().startsWith('image:')) {
+                    // IMAGE GENERATION
+                    const prompt = text.replace(/^image:/i, '').trim();
+                    // Using Pollinations.ai (No API Key needed)
+                    // Added random seed to force refresh
+                    const seed = Math.floor(Math.random() * 1000);
+                    responseText = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}`;
+                    type = "image";
+                    await new Promise(r => setTimeout(r, 1000)); // UX delay
+                } else {
+                    // TEXT GENERATION (GEMINI)
+                    responseText = await callGemini(text, imgToSend);
+                }
+
+                removeLoading(loadId);
+                
+                const botMsg = { role: 'model', content: responseText, type: type, timestamp: Date.now() };
+                addMessage(botMsg);
+                renderMessage(botMsg);
+
+                // Speak response if it's text
+                if(type === 'text') speak(responseText);
+
+                // Update Title
+                const chat = State.chats.find(c => c.id === State.currentChatId);
+                if(chat.messages.length === 2) {
+                    chat.title = text.substring(0, 30);
+                    saveChats();
+                    renderHistory();
+                    els.chatTitle.textContent = chat.title;
+                }
+
+            } catch (err) {
+                removeLoading(loadId);
+                renderMessage({ role: 'model', content: "Error: " + err.message, type: 'text' });
+            }
+        }
+
+        async function callGemini(prompt, imageObj) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${State.modelId}:generateContent?key=${State.apiKey}`;
+            
+            const parts = [{ text: prompt }];
+            if(imageObj) parts.push({ inline_data: { mime_type: imageObj.type, data: imageObj.base64 } });
+
+            const payload = { contents: [{ role: "user", parts }] };
+            if(State.systemPrompt) payload.systemInstruction = { parts: [{ text: State.systemPrompt }] };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error?.message || res.statusText);
+            
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        // --- HELPERS ---
+        function createNewChat() {
+            const id = Date.now().toString();
+            State.currentChatId = id;
+            State.chats.unshift({ id, title: 'New Chat', messages: [], createdAt: Date.now() });
+            saveChats();
+            renderHistory();
+            els.chatTitle.textContent = "New Chat";
+        }
+
+        function addMessage(msg) {
+            const chat = State.chats.find(c => c.id === State.currentChatId);
+            if(chat) { chat.messages.push(msg); saveChats(); }
+        }
+
+        function loadChat(id) {
+            if(!id) {
+                State.currentChatId = null;
+                els.chatContainer.innerHTML = '';
+                els.chatContainer.appendChild(els.welcomeScreen);
+                els.welcomeScreen.classList.remove('hidden');
+                els.chatTitle.textContent = "New Chat";
+                return;
+            }
+            State.currentChatId = id;
+            const chat = State.chats.find(c => c.id === id);
+            if(chat) {
+                els.welcomeScreen.classList.add('hidden');
+                els.chatContainer.innerHTML = '';
+                els.chatContainer.appendChild(els.welcomeScreen);
+                chat.messages.forEach(renderMessage);
+                els.chatTitle.textContent = chat.title;
+                els.sidebar.classList.add('-translate-x-full'); // Mobile close
+            }
+        }
+
+        function renderMessage(msg) {
+            const div = document.createElement('div');
+            const isUser = msg.role === 'user';
+            div.className = `flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`;
+            
+            let contentHTML = '';
+            if(msg.type === 'image') {
+                contentHTML = `
+                    <div class="relative group">
+                        <img src="${msg.content}" class="rounded-lg shadow-lg max-w-xs md:max-w-md border border-slate-700 bg-black min-h-[200px]" alt="Generating..." onerror="this.src='https://placehold.co/400x400?text=Error+Loading+Image'">
+                        <a href="${msg.content}" target="_blank" class="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        </a>
+                    </div>
+                `;
+            } else {
+                contentHTML = marked.parse(msg.content);
+            }
+
+            // Display uploaded image if exists in message history
+            let uploadedHTML = '';
+            if(msg.image) {
+                uploadedHTML = `<img src="${msg.image.base64_full}" class="mb-3 max-h-48 rounded-lg border border-slate-600">`;
+            }
+
+            div.innerHTML = `
+                <div class="max-w-[85%] md:max-w-[75%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-slate-700 text-slate-100 rounded-bl-none'}">
+                    ${uploadedHTML}
+                    <div class="prose prose-invert prose-sm md:prose-base leading-relaxed break-words">
+                        ${contentHTML}
+                    </div>
+                </div>
+            `;
+            els.chatContainer.appendChild(div);
+            div.querySelectorAll('pre code').forEach(hljs.highlightElement);
+            els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
+        }
+
+        function showLoading() {
+            const id = 'loader-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'flex w-full justify-start';
+            div.innerHTML = `
+                <div class="bg-slate-700 p-4 rounded-2xl rounded-bl-none flex items-center gap-1.5 shadow-sm">
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                </div>
+            `;
+            els.chatContainer.appendChild(div);
+            els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
+            return id;
+        }
+
+        function removeLoading(id) { const el = $(id); if(el) el.remove(); }
+
+        function renderHistory() {
+            els.historyList.innerHTML = '';
+            State.chats.forEach(chat => {
+                const div = document.createElement('div');
+                div.className = 'group flex items-center justify-between p-3 rounded-lg hover:bg-slate-800 cursor-pointer transition-all text-slate-300 hover:text-white';
+                div.innerHTML = `
+                    <span class="truncate text-sm font-medium flex-1">${chat.title}</span>
+                    <button class="del-btn opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-opacity">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                `;
+                div.onclick = () => loadChat(chat.id);
+                div.querySelector('.del-btn').onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm("Delete chat?")) {
+                        State.chats = State.chats.filter(c => c.id !== chat.id);
+                        saveChats();
+                        renderHistory();
+                        if(State.currentChatId === chat.id) loadChat(null);
+                    }
+                };
+                els.historyList.appendChild(div);
+            });
+        }
+
+        // --- UTILS ---
+        function toggleVoice() {
+            if(!recognition) return alert("Voice not supported in this browser (Use Chrome).");
+            if(State.isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                State.isRecording = true;
+                els.voiceBtn.classList.add('pulse-recording');
+            }
+        }
+
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            if(!synth) return;
+            // Strip markdown chars for smoother speech
+            const cleanText = text.replace(/[*#`]/g, '');
+            const ut = new SpeechSynthesisUtterance(cleanText);
+            synth.speak(ut);
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                State.uploadedImage = { type: file.type, base64: evt.target.result.split(',')[1], base64_full: evt.target.result };
+                els.imgPreview.src = evt.target.result;
+                els.imgPreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearUpload() {
+            State.uploadedImage = null;
+            els.imgPreviewContainer.classList.add('hidden');
+            els.fileInput.value = '';
+        }
+
+        function resizeInput() {
+            els.input.style.height = 'auto';
+            els.input.style.height = els.input.scrollHeight + 'px';
+        }
+
+        function saveChats() { localStorage.setItem('lony_chats', JSON.stringify(State.chats)); }
+
+        function exportChats() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(State.chats));
+            const node = document.createElement('a');
+            node.setAttribute("href", dataStr);
+            node.setAttribute("download", "lony_chat_backup.json");
+            node.click();
+        }
+
+        function importChats(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const chats = JSON.parse(evt.target.result);
+                    if(!Array.isArray(chats)) throw new Error("Invalid Format");
+                    State.chats = chats;
+                    saveChats();
+                    renderHistory();
+                    alert("Import successful!");
+                } catch(err) { alert("Failed to import: " + err.message); }
+            };
+            reader.readAsText(file);
+        }
+
+        // Run
+        init();
+    </script>
+</body>
+</html>
