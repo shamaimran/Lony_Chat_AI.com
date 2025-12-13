@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta name="google-adsense-account" content="ca-pub-1665528297240550">
+
+    <script async custom-element="amp-auto-ads"
+        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+</script>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1665528297240550"
+     crossorigin="anonymous"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lony Chat - Premium Local AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <style>
+        .site-footer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    gap: 8px;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.site-footer button {
+    background: none;
+    border: none;
+    color: #a1a1aa;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s;
+}
+
+.site-footer button:hover {
+    color: #fff;
+    background: rgba(99, 102, 241, 0.2);
+}
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(to bottom, #0f172a, #1e1b4b); }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .prose pre { background: #1e293b; padding: 1rem; border-radius: 0.75rem; }
+        .typing-indicator span { 
+            @apply h-2 w-2 bg-indigo-400 rounded-full inline-block animate-bounce;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+        .glass { backdrop-filter: blur(12px); background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(99, 102, 241, 0.2); }
+        .active-chat { @apply bg-indigo-600/20 border-indigo-500/50; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex text-slate-100">
+    <amp-auto-ads type="adsense"
+        data-ad-client="ca-pub-1665528297240550">
+</amp-auto-ads>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1665528297240550"
+     crossorigin="anonymous"></script>
+<!-- add by Lony Chat -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-1665528297240550"
+     data-ad-slot="5837694736"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-80 bg-slate-900/90 glass border-r border-slate-800 flex flex-col transition-all duration-300 absolute inset-y-0 left-0 z-40 md:relative -translate-x-full md:translate-x-0">
+        <div class="p-6 border-b border-slate-800">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Lony Chat</h1>
+                <button id="close-sidebar" class="md:hidden text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <button id="new-chat-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-3 transition-all transform hover:scale-105">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                New Conversation
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-4 space-y-1" id="history-list">
+            <!-- Chat history items will be injected here -->
+        </div>
+
+        <div class="p-4 border-t border-slate-800 space-y-2">
+            <button id="settings-btn" class="w-full flex items-center gap-4 text-slate-300 hover:text-white p-3 rounded-xl hover:bg-slate-800/50 transition">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span>Settings & API Key</span>
+            </button>
+            <button id="clear-data-btn" class="w-full flex items-center gap-4 text-red-400 hover:text-red-300 p-3 rounded-xl hover:bg-red-900/20 transition">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                <span>Clear All Data</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="flex-1 flex flex-col relative">
+        <header class="glass border-b border-slate-800 p-5 flex items-center justify-between z-10">
+            <button id="open-sidebar" class="md:hidden text-slate-300 hover:text-white">
+                <i data-lucide="menu" class="w-7 h-7"></i>
+            </button>
+            <div class="text-center">
+                <h2 id="current-chat-title" class="text-xl font-semibold">New Conversation</h2>
+                <p id="model-badge" class="text-sm text-indigo-400 font-medium mt-1">Gemini 2.5 Flash</p>
+            </div>
+            <footer class="site-footer">
+    <button onclick="window.location.href='faq.html'">FAQ</button> |
+  <button onclick="window.location.href='about.html'">About</button> |
+  <button onclick="window.location.href='privacy.html'">Privacy</button> |
+  <button onclick="window.location.href='terms.html'">Terms</button> 
+</footer>
+            <div class="w-7"></div>
+        </header>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-8">
+            <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center px-6">
+                <div class="mb-8 p-6 rounded-3xl bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-indigo-500/30">
+                    <i data-lucide="bot" class="w-16 h-16 text-indigo-400"></i>
+                </div>
+                <!-- Google AdSense Ad Block -->
+<div style="width:100%; max-width:900px; height:250px; margin:20px auto;">
+    <ins class="adsbygoogle"
+        style="display:block; width:100%; height:250px;"
+        data-ad-client="ca-pub-1665528297240550"
+        data-ad-slot="1209823662"
+        data-ad-format="rectangle"></ins>
+</div>
+
+<script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+                <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">Welcome to Lony Chat</h1>
+                <p class="text-slate-400 text-lg max-w-2xl mb-10">Your private, powerful, and fully local AI assistant with vision, voice, and image generation.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
+                    <button class="welcome-prompt glass p-6 rounded-2xl hover:border-indigo-500/60 transition-all text-left group">
+                        <i data-lucide="image" class="w-8 h-8 text-pink-400 mb-3 group-hover:scale-110 transition"></i>
+                        <p class="font-semibold text-white">Generate Image</p>
+                        <p class="text-sm text-slate-400 mt-1">A futuristic city at night with neon lights and flying cars</p>
+                    </button>
+                    <button class="welcome-prompt glass p-6 rounded-2xl hover:border-indigo-500/60 transition-all text-left group">
+                        <i data-lucide="code" class="w-8 h-8 text-green-400 mb-3 group-hover:scale-110 transition"></i>
+                        <p class="font-semibold text-white">Code Assistant</p>
+                        <p class="text-sm text-slate-400 mt-1">Write a React component for a modern dashboard</p>
+                    </button>
+                    <button class="welcome-prompt glass p-6 rounded-2xl hover:border-indigo-500/60 transition-all text-left group">
+                        <i data-lucide="pen-tool" class="w-8 h-8 text-cyan-400 mb-3 group-hover:scale-110 transition"></i>
+                        <p class="font-semibold text-white">Creative Writing</p>
+                        <p class="text-sm text-slate-400 mt-1">Write a short sci-fi story about AI awakening</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-6 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent">
+            <div id="image-preview-container" class="hidden mb-4 flex gap-3 items-center">
+                <img id="image-preview" class="h-32 rounded-xl border-2 border-indigo-500/50 shadow-lg">
+                <button id="remove-image" class="p-2 bg-red-600/80 hover:bg-red-700 rounded-lg text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="glass rounded-3xl p-4 flex items-end gap-3 shadow-2xl border border-slate-700">
+                <button id="upload-btn" class="p-3 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-2xl transition">
+                    <i data-lucide="image-plus" class="w-6 h-6"></i>
+                </button>
+                <input type="file" id="file-input" class="hidden" accept="image/*">
+
+                <button id="gen-img-btn" class="p-3 text-slate-400 hover:text-pink-400 hover:bg-slate-800 rounded-2xl transition">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </button>
+
+                <textarea id="user-input" rows="1" class="flex-1 bg-transparent text-white placeholder-slate-500 resize-none outline-none py-3 max-h-40" placeholder="Ask anything or describe an image to generate..."></textarea>
+
+                <button id="voice-btn" class="p-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-2xl transition">
+                    <i data-lucide="mic" class="w-6 h-6"></i>
+                </button>
+
+                <button id="send-btn" class="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-2xl shadow-lg transition transform hover:scale-105 disabled:opacity-50">
+                    <i data-lucide="send" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <p class="text-center text-xs text-slate-500 mt-4 font-medium">Local Storage • Private • Gemini Powered</p>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-lg p-8 m-4 border border-indigo-500/30">
+            <h2 class="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Settings</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Gemini API Key <span class="text-red-400">*</span></label>
+                    <input type="password" id="api-key-input" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition" placeholder="AIza...">
+                    <p class="text-xs text-slate-500 mt-2">Get free key: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-400 hover:underline">Google AI Studio</a></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Model</label>
+                    <select id="model-select" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">System Prompt (Optional)</label>
+                    <textarea id="system-prompt" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white h-32 resize-none focus:border-indigo-500"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 mt-8">
+                <button id="close-settings" class="px-6 py-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl transition">Cancel</button>
+                <button id="save-settings" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+    lucide.createIcons();
+
+    // --- STATE & CONFIG ---
+    const State = {
+        apiKey: localStorage.getItem('lony_api_key') || '',
+        chats: JSON.parse(localStorage.getItem('lony_chats') || '[]'),
+        currentChatId: null,
+        systemPrompt: localStorage.getItem('lony_system_prompt') || '',
+        modelId: localStorage.getItem('lony_model_id') || 'gemini-2.5-flash',
+        uploadedImage: null,
+        isRecording: false
+    };
+
+    // --- DOM ELEMENTS ---
+    const $ = (id) => document.getElementById(id);
+    const els = {
+        input: $('user-input'),
+        sendBtn: $('send-btn'),
+        genImgBtn: $('gen-img-btn'),
+        voiceBtn: $('voice-btn'),
+        chatContainer: $('chat-container'),
+        historyList: $('history-list'),
+        newChatBtn: $('new-chat-btn'),
+        settingsBtn: $('settings-btn'),
+        settingsModal: $('settings-modal'),
+        apiKeyInput: $('api-key-input'),
+        modelSelect: $('model-select'),
+        sysPromptInput: $('system-prompt'),
+        saveSettingsBtn: $('save-settings'),
+        closeSettingsBtn: $('close-settings'),
+        welcomeScreen: $('welcome-screen'),
+        chatTitle: $('current-chat-title'),
+        sidebar: $('sidebar'),
+        openSidebar: $('open-sidebar'),
+        closeSidebar: $('close-sidebar'),
+        fileInput: $('file-input'),
+        uploadBtn: $('upload-btn'),
+        imgPreview: $('image-preview'),
+        imgPreviewContainer: $('image-preview-container'),
+        removeImgBtn: $('remove-image'),
+        clearDataBtn: $('clear-data-btn'),
+        exportBtn: $('export-btn'),
+        importBtn: $('import-btn'),
+        importFile: $('import-file'),
+        modelBadge: $('model-badge')
+    };
+
+    // --- SPEECH RECOGNITION ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US';
+        recognition.onresult = (e) => {
+            els.input.value = e.results[0][0].transcript;
+        };
+        recognition.onend = () => {
+            State.isRecording = false;
+            els.voiceBtn.classList.remove('pulse-recording');
+        };
+    }
+
+    // --- CORE FUNCTIONS ---
+    async function sendMessage(forceImage = false) {
+        const text = els.input.value.trim();
+        if (!text && !State.uploadedImage) return;
+        if (!State.apiKey) return alert("API Key missing! Settings mein daalo.");
+
+        els.input.value = '';
+        resizeInput();
+        els.welcomeScreen.classList.add('hidden');
+        if (!State.currentChatId) createNewChat();
+
+        const userMsg = { role: 'user', content: text, image: State.uploadedImage, timestamp: Date.now() };
+        addMessage(userMsg);
+        renderMessage(userMsg);
+
+        const imgToSend = State.uploadedImage;
+        clearUpload();
+
+        const loadId = showLoading();
+
+        try {
+            let responseText = "";
+            let type = "text";
+
+            if (forceImage || text.toLowerCase().startsWith('image:')) {
+                const prompt = text.replace(/^image:/i, '').trim();
+                const seed = Math.floor(Math.random() * 1000);
+                responseText = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}`;
+                type = "image";
+                await new Promise(r => setTimeout(r, 1000));
+            } else {
+                responseText = await callGemini(text, imgToSend);
+            }
+
+            removeLoading(loadId);
+            const botMsg = { role: 'model', content: responseText, type: type, timestamp: Date.now() };
+            addMessage(botMsg);
+            renderMessage(botMsg);
+
+            if (type === 'text') speak(responseText);
+
+            const chat = State.chats.find(c => c.id === State.currentChatId);
+            if (chat.messages.length === 2) {
+                chat.title = text.substring(0, 30);
+                saveChats();
+                renderHistory();
+                els.chatTitle.textContent = chat.title;
+            }
+
+        } catch (err) {
+            removeLoading(loadId);
+            renderMessage({ role: 'model', content: "Error: " + err.message, type: 'text' });
+        }
+    }
+
+    async function callGemini(prompt, imageObj) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${State.modelId}:generateContent?key=${State.apiKey}`;
+        
+        const parts = [{ text: prompt }];
+        if (imageObj) parts.push({ inline_data: { mime_type: imageObj.type, data: imageObj.base64 } });
+
+        const payload = { contents: [{ role: "user", parts }] };
+        if (State.systemPrompt) payload.systemInstruction = { parts: [{ text: State.systemPrompt }] };
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || "API Error");
+        
+        return data.candidates[0].content.parts[0].text;
+    }
+
+    // --- OTHER HELPERS (same as original) ---
+    function createNewChat() {
+        const id = Date.now().toString();
+        State.currentChatId = id;
+        State.chats.unshift({ id, title: 'New Chat', messages: [], createdAt: Date.now() });
+        saveChats();
+        renderHistory();
+        els.chatTitle.textContent = "New Chat";
+    }
+
+    function addMessage(msg) {
+        const chat = State.chats.find(c => c.id === State.currentChatId);
+        if (chat) { chat.messages.push(msg); saveChats(); }
+    }
+
+    function loadChat(id) {
+        if (!id) {
+            State.currentChatId = null;
+            els.chatContainer.innerHTML = '';
+            els.chatContainer.appendChild(els.welcomeScreen);
+            els.welcomeScreen.classList.remove('hidden');
+            els.chatTitle.textContent = "New Conversation";
+            return;
+        }
+        State.currentChatId = id;
+        const chat = State.chats.find(c => c.id === id);
+        if (chat) {
+            els.welcomeScreen.classList.add('hidden');
+            els.chatContainer.innerHTML = '';
+            chat.messages.forEach(renderMessage);
+            els.chatTitle.textContent = chat.title;
+            els.sidebar.classList.add('-translate-x-full');
+        }
+    }
+
+    function renderMessage(msg) {
+        const div = document.createElement('div');
+        const isUser = msg.role === 'user';
+        div.className = `flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`;
+        
+        let contentHTML = msg.type === 'image' 
+            ? `<div class="relative group"><img src="${msg.content}" class="rounded-lg shadow-lg max-w-xs md:max-w-md border border-slate-700" onerror="this.src='https://placehold.co/400x400?text=Error'"><a href="${msg.content}" target="_blank" class="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"><i data-lucide="external-link" class="w-4 h-4"></i></a></div>`
+            : marked.parse(msg.content);
+
+        let uploadedHTML = msg.image ? `<img src="${msg.image.base64_full}" class="mb-3 max-h-48 rounded-lg border border-slate-600">` : '';
+
+        div.innerHTML = `
+            <div class="max-w-[85%] md:max-w-[75%] p-5 rounded-3xl shadow-lg ${isUser ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-none' : 'bg-slate-800/80 text-slate-100 rounded-bl-none'}">
+                ${uploadedHTML}
+                <div class="prose prose-invert prose-sm md:prose-base leading-relaxed break-words">
+                    ${contentHTML}
+                </div>
+            </div>
+        `;
+        els.chatContainer.appendChild(div);
+        div.querySelectorAll('pre code').forEach(hljs.highlightElement);
+        els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
+        lucide.createIcons({ parent: div });
+    }
+
+    function showLoading() {
+        const id = 'loader-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'flex w-full justify-start';
+        div.innerHTML = `
+            <div class="bg-slate-800/80 p-5 rounded-3xl rounded-bl-none flex items-center gap-3 shadow-lg">
+                <div class="typing-indicator"><span></span><span></span><span></span></div>
+                <span class="text-slate-400">Thinking...</span>
+            </div>
+        `;
+        els.chatContainer.appendChild(div);
+        els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
+        return id;
+    }
+
+    function removeLoading(id) { const el = $(id); if (el) el.remove(); }
+
+    function renderHistory() {
+        els.historyList.innerHTML = '';
+        State.chats.forEach(chat => {
+            const div = document.createElement('div');
+            const isActive = chat.id === State.currentChatId;
+            div.className = `group flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-indigo-600/20 border border-indigo-500/50' : 'hover:bg-slate-800/50'}`;
+            div.innerHTML = `
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <i data-lucide="message-square" class="w-5 h-5 text-slate-400"></i>
+                    <span class="truncate text-sm font-medium">${chat.title}</span>
+                </div>
+                <button class="del-btn opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400 rounded-lg hover:bg-red-900/30 transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            `;
+            div.onclick = () => loadChat(chat.id);
+            div.querySelector('.del-btn').onclick = (e) => {
+                e.stopPropagation();
+                if (confirm("Delete chat?")) {
+                    State.chats = State.chats.filter(c => c.id !== chat.id);
+                    saveChats();
+                    renderHistory();
+                    if (State.currentChatId === chat.id) loadChat(null);
+                }
+            };
+            els.historyList.appendChild(div);
+            lucide.createIcons({ parent: div });
+        });
+    }
+
+    function handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            State.uploadedImage = { type: file.type, base64: evt.target.result.split(',')[1], base64_full: evt.target.result };
+            els.imgPreview.src = evt.target.result;
+            els.imgPreviewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearUpload() {
+        State.uploadedImage = null;
+        els.imgPreviewContainer.classList.add('hidden');
+        els.fileInput.value = '';
+    }
+
+    function resizeInput() {
+        els.input.style.height = 'auto';
+        els.input.style.height = els.input.scrollHeight + 'px';
+    }
+
+    function saveChats() { localStorage.setItem('lony_chats', JSON.stringify(State.chats)); }
+
+    function speak(text) {
+        const cleanText = text.replace(/[*#`]/g, '');
+        const ut = new SpeechSynthesisUtterance(cleanText);
+        window.speechSynthesis.speak(ut);
+    }
+
+    // --- INITIALIZATION ---
+    function init() {
+        renderHistory();
+        els.modelBadge.textContent = State.modelId.replace('gemini-', 'Gemini ').replace('-flash', ' Flash');
+
+        if (!State.apiKey) els.settingsModal.classList.remove('hidden');
+
+        els.newChatBtn.onclick = () => loadChat(null);
+        els.sendBtn.onclick = () => sendMessage(false);
+        els.genImgBtn.onclick = () => sendMessage(true);
+        els.voiceBtn.onclick = () => {
+            if (!recognition) return alert("Voice not supported (Chrome use karo)");
+            if (State.isRecording) recognition.stop();
+            else { recognition.start(); State.isRecording = true; els.voiceBtn.classList.add('pulse-recording'); }
+        };
+        els.input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(false); } };
+        els.uploadBtn.onclick = () => els.fileInput.click();
+        els.fileInput.onchange = handleFileUpload;
+        els.removeImgBtn.onclick = clearUpload;
+        els.settingsBtn.onclick = () => {
+            els.apiKeyInput.value = State.apiKey;
+            els.sysPromptInput.value = State.systemPrompt;
+            els.modelSelect.value = State.modelId;
+            els.settingsModal.classList.remove('hidden');
+        };
+        els.closeSettingsBtn.onclick = () => els.settingsModal.classList.add('hidden');
+        els.saveSettingsBtn.onclick = () => {
+            State.apiKey = els.apiKeyInput.value.trim();
+            State.systemPrompt = els.sysPromptInput.value.trim();
+            State.modelId = els.modelSelect.value;
+            localStorage.setItem('lony_api_key', State.apiKey);
+            localStorage.setItem('lony_system_prompt', State.systemPrompt);
+            localStorage.setItem('lony_model_id', State.modelId);
+            els.modelBadge.textContent = State.modelId.replace('gemini-', 'Gemini ').replace('-flash', ' Flash');
+            els.settingsModal.classList.add('hidden');
+            alert("Settings saved! Ab message bhejo.");
+        };
+        els.openSidebar.onclick = () => els.sidebar.classList.remove('-translate-x-full');
+        els.closeSidebar.onclick = () => els.sidebar.classList.add('-translate-x-full');
+        els.clearDataBtn.onclick = () => { if (confirm("Sab delete?")) { localStorage.clear(); location.reload(); } };
+
+        document.querySelectorAll('.welcome-prompt').forEach(btn => {
+            btn.onclick = () => {
+                const text = btn.querySelector('p:last-of-type').innerText;
+                els.input.value = text;
+                sendMessage(text.toLowerCase().includes('image') || text.toLowerCase().includes('generate'));
+            };
+        });
+
+        resizeInput();
+    }
+
+    init();
+</script>
+</body>
+</html>
