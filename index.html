@@ -125,6 +125,7 @@
             <div class="text-center">
                 <h2 id="current-chat-title" class="text-xl font-semibold">New Conversation</h2>
                 <p id="model-badge" class="text-sm text-indigo-400 font-medium mt-1">Llama 3.3 70B Versatile</p>
+                <p id="live-connection" class="text-sm text-green-400 font-medium mt-1 hidden">Live Connection +00:00</p>
             </div>
             <footer class="site-footer">
                 <button onclick="window.location.href='faq.html'">FAQ</button> |
@@ -174,9 +175,30 @@
                 </div>
             </div>
         </div>
+        <div id="voice-screen" class="hidden flex flex-col h-full">
+            <div class="flex-1 flex items-center justify-center flex-col text-center">
+                <div class="relative">
+                    <div class="rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 p-16 shadow-2xl">
+                        <i data-lucide="waves" class="w-32 h-32 text-white opacity-80"></i>
+                    </div>
+                    <div class="absolute inset-0 animate-ping rounded-full bg-purple-500 opacity-20"></div>
+                </div>
+                <h2 id="voice-status" class="text-2xl font-semibold mt-8">Listening...</h2>
+                <p class="text-slate-400 mt-2">Go ahead, I'm ready to help.</p>
+            </div>
+            <div class="p-4 bg-slate-900/90 flex justify-center gap-4">
+                <button id="refresh-voice" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white" title="Refresh"><i data-lucide="refresh-cw"></i></button>
+                <button id="flip-camera" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white" title="Flip Camera"><i data-lucide="repeat"></i></button>
+                <button id="toggle-video" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white" title="Toggle Video"><i data-lucide="video"></i></button>
+                <button id="mute-mic" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white" title="Mute Mic"><i data-lucide="mic"></i></button>
+                <button id="mute-speaker" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white" title="Mute Speaker"><i data-lucide="volume-2"></i></button>
+                <button id="voice-settings" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white" title="Settings"><i data-lucide="settings"></i></button>
+                <button id="hangup" class="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white" title="End"><i data-lucide="phone-off"></i></button>
+            </div>
+        </div>
 
         <!-- Input Area -->
-        <div class="p-6 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent">
+        <div id="input-area" class="p-6 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent">
             <div id="image-preview-container" class="hidden mb-4 flex gap-3 items-center">
                 <img id="image-preview" class="h-32 rounded-xl border-2 border-indigo-500/50 shadow-lg">
                 <button id="remove-image" class="p-2 bg-red-600/80 hover:bg-red-700 rounded-lg text-white">
@@ -259,7 +281,12 @@
         systemPrompt: localStorage.getItem('lony_system_prompt') || '',
         modelId: localStorage.getItem('lony_model_id') || 'llama-3.3-70b-versatile',
         uploadedImage: null,
-        isRecording: false
+        isRecording: false,
+        voiceMode: false,
+        muteMic: false,
+        muteSpeaker: false,
+        timer: 0,
+        timerInterval: null
     };
 
     // --- DOM ELEMENTS ---
@@ -290,24 +317,54 @@
         imgPreviewContainer: $('image-preview-container'),
         removeImgBtn: $('remove-image'),
         clearDataBtn: $('clear-data-btn'),
-        modelBadge: $('model-badge')
+        modelBadge: $('model-badge'),
+        voiceScreen: $('voice-screen'),
+        voiceStatus: $('voice-status'),
+        liveConnection: $('live-connection'),
+        inputArea: $('input-area'),
+        muteMic: $('mute-mic'),
+        muteSpeaker: $('mute-speaker'),
+        hangup: $('hangup'),
+        voiceSettings: $('voice-settings'),
+        flipCamera: $('flip-camera'),
+        toggleVideo: $('toggle-video'),
+        refreshVoice: $('refresh-voice')
     };
 
     // --- SPEECH RECOGNITION ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.lang = 'en-US';
-        recognition.onresult = (e) => {
-            els.input.value = e.results[0][0].transcript;
-        };
-        recognition.onend = () => {
-            State.isRecording = false;
-            els.voiceBtn.classList.remove('pulse-recording');
-        };
-    }
+if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;            // ← یہاں true کریں
+    recognition.interimResults = true;        // ← یہ بھی true کریں (بہتر تجربہ)
+    recognition.lang = 'en-US';               // یا آپ کی زبان (مثلاً 'ur-PK' اردو کے لیے)
+
+    recognition.onresult = (e) => {
+        const transcript = e.results[e.results.length - 1][0].transcript;
+        if (e.results[e.results.length - 1].isFinal) {  // صرف فائنل ریزلٹ پر بھیجیں
+            sendVoiceMessage(transcript);
+        }
+    };
+
+    // onend میں دوبارہ start نہ کریں (continuous=true کی وجہ سے ضرورت نہیں)
+    recognition.onend = () => {
+        // اگر voice mode ابھی بھی آن ہے تو دوبارہ شروع کریں (بہت کم کیسز میں)
+        if (State.voiceMode && !State.muteMic) {
+            recognition.start();
+        }
+    };
+
+    recognition.onerror = (e) => {
+        console.error("SpeechRecognition error:", e);
+        if (State.voiceMode && !State.muteMic) {
+            // تھوڑا انتظار کر کے دوبارہ شروع کریں
+            setTimeout(() => {
+                recognition.start();
+            }, 1000);
+        }
+    };
+}
 
     // --- CORE FUNCTIONS ---
     async function sendMessage(forceImage = false) {
@@ -565,6 +622,57 @@
         window.speechSynthesis.speak(ut);
     }
 
+    function enterVoiceMode() {
+        if (!recognition) return alert("Voice not supported (Chrome use karo)");
+        State.voiceMode = true;
+        els.chatContainer.classList.add('hidden');
+        els.inputArea.classList.add('hidden');
+        els.voiceScreen.classList.remove('hidden');
+        els.modelBadge.classList.add('hidden');
+        els.liveConnection.classList.remove('hidden');
+        State.timer = 0;
+        updateTimer();
+        State.timerInterval = setInterval(() => { State.timer++; updateTimer(); }, 1000);
+        if (!State.currentChatId) createNewChat();
+        if (!State.muteMic) recognition.start();
+    }
+
+    function exitVoiceMode() {
+        State.voiceMode = false;
+        recognition.stop();
+        clearInterval(State.timerInterval);
+        speechSynthesis.cancel();
+        els.voiceScreen.classList.add('hidden');
+        els.chatContainer.classList.remove('hidden');
+        els.inputArea.classList.remove('hidden');
+        els.modelBadge.classList.remove('hidden');
+        els.liveConnection.classList.add('hidden');
+        loadChat(State.currentChatId);
+    }
+
+    function updateTimer() {
+        const m = Math.floor(State.timer / 60).toString().padStart(2, '0');
+        const s = (State.timer % 60).toString().padStart(2, '0');
+        els.liveConnection.textContent = `Live Connection +${m}:${s}`;
+    }
+
+    async function sendVoiceMessage(text) {
+        if (!text.trim()) return;
+        els.voiceStatus.textContent = 'Thinking...';
+        const userMsg = { role: 'user', content: text, timestamp: Date.now() };
+        addMessage(userMsg);
+        try {
+            const responseText = await callGroq(null);
+            const botMsg = { role: 'model', content: responseText, type: 'text', timestamp: Date.now() };
+            addMessage(botMsg);
+            if (!State.muteSpeaker) speak(responseText);
+            els.voiceStatus.textContent = 'Listening...';
+        } catch (err) {
+            console.error(err);
+            els.voiceStatus.textContent = 'Listening...';
+        }
+    }
+
     // --- INITIALIZATION ---
     function init() {
         renderHistory();
@@ -590,9 +698,11 @@
         els.sendBtn.onclick = () => sendMessage(false);
         els.genImgBtn.onclick = () => sendMessage(true);
         els.voiceBtn.onclick = () => {
-            if (!recognition) return alert("Voice not supported (Chrome use karo)");
-            if (State.isRecording) recognition.stop();
-            else { recognition.start(); State.isRecording = true; els.voiceBtn.classList.add('pulse-recording'); }
+            if (State.voiceMode) {
+                exitVoiceMode();
+            } else {
+                enterVoiceMode();
+            }
         };
         els.input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(false); } };
         els.uploadBtn.onclick = () => els.fileInput.click();
@@ -627,6 +737,35 @@
                 sendMessage(text.toLowerCase().includes('image') || text.toLowerCase().includes('generate'));
             };
         });
+
+        els.hangup.onclick = exitVoiceMode;
+        els.voiceSettings.onclick = els.settingsBtn.onclick;
+        els.muteMic.onclick = () => {
+            State.muteMic = !State.muteMic;
+            const icon = State.muteMic ? 'mic-off' : 'mic';
+            els.muteMic.innerHTML = `<i data-lucide="${icon}"></i>`;
+            lucide.createIcons({parent: els.muteMic});
+            if (State.muteMic) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        };
+        els.muteSpeaker.onclick = () => {
+            State.muteSpeaker = !State.muteSpeaker;
+            const icon = State.muteSpeaker ? 'volume-x' : 'volume-2';
+            els.muteSpeaker.innerHTML = `<i data-lucide="${icon}"></i>`;
+            lucide.createIcons({parent: els.muteSpeaker});
+            if (State.muteSpeaker) {
+                speechSynthesis.cancel();
+            }
+        };
+        els.flipCamera.onclick = () => alert('Flip Camera not implemented');
+        els.toggleVideo.onclick = () => alert('Video not implemented');
+        els.refreshVoice.onclick = () => {
+            recognition.stop();
+            if (!State.muteMic) recognition.start();
+        };
 
         resizeInput();
     }
