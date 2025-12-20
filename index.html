@@ -62,6 +62,8 @@
         @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
         .glass { backdrop-filter: blur(12px); background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(99, 102, 241, 0.2); }
         .active-chat { @apply bg-indigo-600/20 border-indigo-500/50; }
+        #settings-modal { overflow-y: auto; }
+        #settings-modal > div { max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex text-slate-100">
@@ -154,7 +156,7 @@
                     (adsbygoogle = window.adsbygoogle || []).push({});
                 </script>
                 <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">Welcome to Lony Chat</h1>
-                <p class="text-slate-400 text-lg max-w-2xl mb-10">Your private, powerful, and fully local AI assistant with voice and image generation. Powered by Groq's lightning-fast inference!</p>
+                <p class="text-slate-400 text-lg max-w-2xl mb-10">Your private, powerful, and fully local AI assistant with voice and image generation. Powered by Groq & Gemini!</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
                     <button class="welcome-prompt glass p-6 rounded-2xl hover:border-indigo-500/60 transition-all text-left group">
@@ -227,33 +229,37 @@
                 </button>
             </div>
 
-            <p class="text-center text-xs text-slate-500 mt-4 font-medium">Local Storage • Private • Groq Powered (Lightning Fast)</p>
+            <p class="text-center text-xs text-slate-500 mt-4 font-medium">Local Storage • Private • Groq & Gemini Powered</p>
         </div>
     </main>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 backdrop-blur-sm">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-lg p-8 m-4 border border-indigo-500/30">
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-lg p-8 m-4 border border-indigo-500/30 max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Settings</h2>
             
             <div class="space-y-6">
                 <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Provider</label>
+                    <select id="provider-select" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500">
+                        <option value="groq">Groq</option>
+                        <option value="gemini">Gemini</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Groq API Key <span class="text-red-400">*</span></label>
-                    <input type="password" id="api-key-input" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition" placeholder="gsk_...">
+                    <input type="password" id="groq-api-key-input" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition" placeholder="gsk_...">
                     <p class="text-xs text-slate-500 mt-2">Get free key: <a href="https://console.groq.com/keys" target="_blank" class="text-indigo-400 hover:underline">Groq Console</a></p>
                 </div>
-
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Gemini API Key <span class="text-red-400">*</span></label>
+                    <input type="password" id="gemini-api-key-input" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition" placeholder="AIzaSy...">
+                    <p class="text-xs text-slate-500 mt-2">Get key: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-400 hover:underline">Google AI Studio</a></p>
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Model</label>
                     <select id="model-select" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white focus:border-indigo-500">
-                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended - Most Powerful)</option>
-                        <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Super Fast)</option>
-                        <option value="openai/gpt-oss-120b">GPT-OSS 120B (State-of-the-Art Reasoning)</option>
-                        <option value="openai/gpt-oss-20b">GPT-OSS 20B (Fast & Capable)</option>
-                        <option value="meta-llama/llama-guard-4-12b">Llama Guard 4 12B (Safety/Moderation)</option>
-                        <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (Preview - Multimodal)</option>
-                        <option value="meta-llama/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick (Preview - Multimodal)</option>
-                        <option value="qwen/qwen3-32b">Qwen3 32B (Strong Multilingual)</option>
+                        <!-- Options populated dynamically -->
                     </select>
                 </div>
 
@@ -275,13 +281,14 @@
 
     // --- STATE & CONFIG ---
     const State = {
-        apiKey: localStorage.getItem('lony_api_key') || '',
+        groqKey: localStorage.getItem('lony_groq_key') || '',
+        geminiKey: localStorage.getItem('lony_gemini_key') || '',
+        provider: localStorage.getItem('lony_provider') || 'groq',
         chats: JSON.parse(localStorage.getItem('lony_chats') || '[]'),
         currentChatId: null,
         systemPrompt: localStorage.getItem('lony_system_prompt') || '',
         modelId: localStorage.getItem('lony_model_id') || 'llama-3.3-70b-versatile',
         uploadedImage: null,
-        isRecording: false,
         voiceMode: false,
         muteMic: false,
         muteSpeaker: false,
@@ -301,7 +308,9 @@
         newChatBtn: $('new-chat-btn'),
         settingsBtn: $('settings-btn'),
         settingsModal: $('settings-modal'),
-        apiKeyInput: $('api-key-input'),
+        groqApiKeyInput: $('groq-api-key-input'),
+        geminiApiKeyInput: $('gemini-api-key-input'),
+        providerSelect: $('provider-select'),
         modelSelect: $('model-select'),
         sysPromptInput: $('system-prompt'),
         saveSettingsBtn: $('save-settings'),
@@ -325,52 +334,40 @@
         muteMic: $('mute-mic'),
         muteSpeaker: $('mute-speaker'),
         hangup: $('hangup'),
-        voiceSettings: $('voice-settings'),
-        flipCamera: $('flip-camera'),
-        toggleVideo: $('toggle-video'),
-        refreshVoice: $('refresh-voice')
+        voiceSettings: $('voice-settings')
     };
 
     // --- SPEECH RECOGNITION ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
-if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;            // ← یہاں true کریں
-    recognition.interimResults = true;        // ← یہ بھی true کریں (بہتر تجربہ)
-    recognition.lang = 'en-US';               // یا آپ کی زبان (مثلاً 'ur-PK' اردو کے لیے)
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
 
-    recognition.onresult = (e) => {
-        const transcript = e.results[e.results.length - 1][0].transcript;
-        if (e.results[e.results.length - 1].isFinal) {  // صرف فائنل ریزلٹ پر بھیجیں
-            sendVoiceMessage(transcript);
-        }
-    };
+        recognition.onresult = (e) => {
+            const transcript = Array.from(e.results).map(result => result[0].transcript).join('');
+            if (e.results[e.results.length - 1].isFinal) {
+                sendVoiceMessage(transcript);
+            }
+        };
 
-    // onend میں دوبارہ start نہ کریں (continuous=true کی وجہ سے ضرورت نہیں)
-    recognition.onend = () => {
-        // اگر voice mode ابھی بھی آن ہے تو دوبارہ شروع کریں (بہت کم کیسز میں)
-        if (State.voiceMode && !State.muteMic) {
-            recognition.start();
-        }
-    };
+        recognition.onend = () => {
+            if (State.voiceMode && !State.muteMic) recognition.start();
+        };
 
-    recognition.onerror = (e) => {
-        console.error("SpeechRecognition error:", e);
-        if (State.voiceMode && !State.muteMic) {
-            // تھوڑا انتظار کر کے دوبارہ شروع کریں
-            setTimeout(() => {
-                recognition.start();
-            }, 1000);
-        }
-    };
-}
+        recognition.onerror = () => {
+            if (State.voiceMode && !State.muteMic) setTimeout(() => recognition.start(), 1000);
+        };
+    }
 
     // --- CORE FUNCTIONS ---
     async function sendMessage(forceImage = false) {
         const text = els.input.value.trim();
         if (!text && !State.uploadedImage) return;
-        if (!State.apiKey) return alert("API Key missing! Settings mein daalo.");
+        const apiKey = State.provider === 'groq' ? State.groqKey : State.geminiKey;
+        if (!apiKey) return alert(`${State.provider.toUpperCase()} API Key missing! Settings mein daalo.`);
 
         els.input.value = '';
         resizeInput();
@@ -392,12 +389,11 @@ if (SpeechRecognition) {
 
             if (forceImage || text.toLowerCase().startsWith('image:')) {
                 const prompt = text.replace(/^image:/i, '').trim();
-                const seed = Math.floor(Math.random() * 1000);
+                const seed = Math.floor(Math.random() * 1000000);
                 responseText = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}`;
                 type = "image";
-                await new Promise(r => setTimeout(r, 1000));
             } else {
-                responseText = await callGroq(imgToSend);
+                responseText = await callAPI(imgToSend);
             }
 
             removeLoading(loadId);
@@ -408,94 +404,98 @@ if (SpeechRecognition) {
             if (type === 'text') speak(responseText);
 
             const chat = State.chats.find(c => c.id === State.currentChatId);
-            if (chat.messages.length === 2) {
+            if (chat && chat.messages.length === 2) {
                 chat.title = text.substring(0, 30);
                 saveChats();
                 renderHistory();
                 els.chatTitle.textContent = chat.title;
             }
-
         } catch (err) {
             removeLoading(loadId);
-            renderMessage({ role: 'model', content: "Error: " + err.message, type: 'text' });
+            renderMessage({ role: 'model', content: `Error: ${err.message || 'API Error'}`, type: 'text' });
         }
     }
 
-    async function callGroq(uploadedImage) {
-        const url = `https://api.groq.com/openai/v1/chat/completions`;
-        
-        const chat = State.chats.find(c => c.id === State.currentChatId);
-        const messages = [];
-        
-        if (State.systemPrompt) {
-            messages.push({ role: "system", content: State.systemPrompt });
-        }
-        
-        chat.messages.forEach(msg => {
-            if (msg.role === 'user') {
-                let content = [];
-                if (msg.content) content.push({ type: "text", text: msg.content });
-                if (msg.image) {
-                    content.push({
-                        type: "image_url",
-                        image_url: { url: msg.image.base64_full }
-                    });
-                }
-                if (content.length > 0) {
-                    messages.push({ role: "user", content });
-                }
-            } else {
-                let text = msg.content;
-                if (msg.type === 'image') {
-                    text = `I generated this image: ${msg.content}`;
-                }
-                messages.push({ role: "assistant", content: text });
-            }
-        });
+    async function callAPI(uploadedImage) {
+        const chat = State.chats.find(c => c.id === State.currentChatId) || { messages: [] };
 
-        // Current message with possible image
-        let currentContent = [{ type: "text", text: chat.messages[chat.messages.length - 1].content }];
-        if (uploadedImage) {
-            currentContent.push({
-                type: "image_url",
-                image_url: { url: uploadedImage.base64_full }
+        if (State.provider === 'groq') {
+            const url = 'https://api.groq.com/openai/v1/chat/completions';
+            const messages = [];
+
+            if (State.systemPrompt) messages.push({ role: 'system', content: State.systemPrompt });
+
+            chat.messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    let content = [];
+                    if (msg.content) content.push({ type: 'text', text: msg.content });
+                    if (msg.image) content.push({ type: 'image_url', image_url: { url: msg.image.base64_full } });
+                    if (content.length) messages.push({ role: 'user', content });
+                } else {
+                    messages.push({ role: 'assistant', content: msg.content });
+                }
             });
+
+            let currentContent = [{ type: 'text', text: els.input.value }];
+            if (uploadedImage) currentContent.push({ type: 'image_url', image_url: { url: uploadedImage.base64_full } });
+            messages.push({ role: 'user', content: currentContent });
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${State.groqKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ model: State.modelId, messages })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error?.message || 'Groq API Error');
+            return data.choices[0].message.content;
+        } else if (State.provider === 'gemini') {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${State.modelId}:generateContent?key=${State.geminiKey}`;
+            const contents = [];
+
+            chat.messages.forEach(msg => {
+                const role = msg.role === 'user' ? 'user' : 'model';
+                let parts = [];
+                if (msg.content) parts.push({ text: msg.content });
+                if (msg.image) parts.push({ inline_data: { mime_type: msg.image.type, data: msg.image.base64 } });
+                if (parts.length) contents.push({ role, parts });
+            });
+
+            let currentParts = [{ text: els.input.value }];
+            if (uploadedImage) currentParts.push({ inline_data: { mime_type: uploadedImage.type, data: uploadedImage.base64 } });
+            contents.push({ role: 'user', parts: currentParts });
+
+            const payload = { contents };
+            if (State.systemPrompt) payload.system_instruction = { parts: [{ text: State.systemPrompt }] };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error?.message || 'Gemini API Error');
+            return data.candidates[0].content.parts[0].text;
         }
-        messages.push({ role: "user", content: currentContent });
-
-        const payload = {
-            model: State.modelId,
-            messages: messages
-        };
-
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${State.apiKey}`
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || "API Error");
-        
-        return data.choices[0].message.content;
     }
 
-    // --- OTHER HELPERS ---
     function createNewChat() {
         const id = Date.now().toString();
         State.currentChatId = id;
-        State.chats.unshift({ id, title: 'New Chat', messages: [], createdAt: Date.now() });
+        State.chats.unshift({ id, title: 'New Chat', messages: [] });
         saveChats();
         renderHistory();
-        els.chatTitle.textContent = "New Chat";
+        els.chatTitle.textContent = 'New Chat';
     }
 
     function addMessage(msg) {
         const chat = State.chats.find(c => c.id === State.currentChatId);
-        if (chat) { chat.messages.push(msg); saveChats(); }
+        if (chat) chat.messages.push(msg);
+        saveChats();
     }
 
     function loadChat(id) {
@@ -504,7 +504,7 @@ if (SpeechRecognition) {
             els.chatContainer.innerHTML = '';
             els.chatContainer.appendChild(els.welcomeScreen);
             els.welcomeScreen.classList.remove('hidden');
-            els.chatTitle.textContent = "New Conversation";
+            els.chatTitle.textContent = 'New Conversation';
             return;
         }
         State.currentChatId = id;
@@ -522,7 +522,7 @@ if (SpeechRecognition) {
         const div = document.createElement('div');
         const isUser = msg.role === 'user';
         div.className = `flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`;
-        
+
         let contentHTML = msg.type === 'image' 
             ? `<div class="relative group"><img src="${msg.content}" class="rounded-lg shadow-lg max-w-xs md:max-w-md border border-slate-700" onerror="this.src='https://placehold.co/400x400?text=Error'"><a href="${msg.content}" target="_blank" class="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"><i data-lucide="external-link" class="w-4 h-4"></i></a></div>`
             : marked.parse(msg.content);
@@ -559,7 +559,10 @@ if (SpeechRecognition) {
         return id;
     }
 
-    function removeLoading(id) { const el = $(id); if (el) el.remove(); }
+    function removeLoading(id) {
+        const el = $(id);
+        if (el) el.remove();
+    }
 
     function renderHistory() {
         els.historyList.innerHTML = '';
@@ -614,7 +617,9 @@ if (SpeechRecognition) {
         els.input.style.height = els.input.scrollHeight + 'px';
     }
 
-    function saveChats() { localStorage.setItem('lony_chats', JSON.stringify(State.chats)); }
+    function saveChats() {
+        localStorage.setItem('lony_chats', JSON.stringify(State.chats));
+    }
 
     function speak(text) {
         const cleanText = text.replace(/[*#`]/g, '');
@@ -639,7 +644,7 @@ if (SpeechRecognition) {
 
     function exitVoiceMode() {
         State.voiceMode = false;
-        recognition.stop();
+        if (recognition) recognition.stop();
         clearInterval(State.timerInterval);
         speechSynthesis.cancel();
         els.voiceScreen.classList.add('hidden');
@@ -662,73 +667,109 @@ if (SpeechRecognition) {
         const userMsg = { role: 'user', content: text, timestamp: Date.now() };
         addMessage(userMsg);
         try {
-            const responseText = await callGroq(null);
+            const responseText = await callAPI(null);
             const botMsg = { role: 'model', content: responseText, type: 'text', timestamp: Date.now() };
             addMessage(botMsg);
             if (!State.muteSpeaker) speak(responseText);
             els.voiceStatus.textContent = 'Listening...';
         } catch (err) {
-            console.error(err);
             els.voiceStatus.textContent = 'Listening...';
         }
+    }
+
+    function updateModelOptions(provider) {
+        els.modelSelect.innerHTML = '';
+        if (provider === 'groq') {
+            const options = [
+                { value: 'llama-3.3-70b-versatile', text: 'Llama 3.3 70B Versatile (Recommended)' },
+                { value: 'llama-3.1-8b-instant', text: 'Llama 3.1 8B Instant' },
+                { value: 'mixtral-8x7b-32768', text: 'Mixtral 8x7B' },
+                { value: 'gemma2-9b-it', text: 'Gemma 2 9B' }
+            ];
+            options.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.textContent = o.text;
+                els.modelSelect.appendChild(opt);
+            });
+        } else if (provider === 'gemini') {
+            const options = [
+                { value: 'gemini-2.5-flash', text: 'Gemini 2.5 Flash (Fast & Recommended)' },
+                { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro (Advanced)' },
+                { value: 'gemini-3-flash-preview', text: 'Gemini 3 Flash Preview (Latest Fast)' }
+            ];
+            options.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.textContent = o.text;
+                els.modelSelect.appendChild(opt);
+            });
+        }
+    }
+
+    function updateModelBadge() {
+        let name = State.modelId;
+        if (State.provider === 'gemini') {
+            name = name.replace('gemini-', 'Gemini ').replace('-flash', ' Flash').replace('-pro', ' Pro').replace('-preview', ' Preview');
+        } else if (State.provider === 'groq') {
+            name = name.replace('llama-3.3-70b-versatile', 'Llama 3.3 70B Versatile')
+                       .replace('llama-3.1-8b-instant', 'Llama 3.1 8B Instant')
+                       .replace('mixtral-8x7b-32768', 'Mixtral 8x7B')
+                       .replace('gemma2-9b-it', 'Gemma 2 9B');
+        }
+        els.modelBadge.textContent = `${State.provider.toUpperCase()} - ${name}`;
     }
 
     // --- INITIALIZATION ---
     function init() {
         renderHistory();
-
-        // Improved model badge display
-        function updateModelBadge() {
-            let name = State.modelId;
-            if (name === 'llama-3.3-70b-versatile') name = 'Llama 3.3 70B Versatile';
-            else if (name === 'llama-3.1-8b-instant') name = 'Llama 3.1 8B Instant';
-            else if (name === 'openai/gpt-oss-120b') name = 'GPT-OSS 120B';
-            else if (name === 'openai/gpt-oss-20b') name = 'GPT-OSS 20B';
-            else if (name === 'meta-llama/llama-guard-4-12b') name = 'Llama Guard 4 12B';
-            else if (name.includes('llama-4-scout')) name = 'Llama 4 Scout (Preview)';
-            else if (name.includes('llama-4-maverick')) name = 'Llama 4 Maverick (Preview)';
-            else if (name === 'qwen/qwen3-32b') name = 'Qwen3 32B';
-            els.modelBadge.textContent = name;
-        }
+        updateModelOptions(State.provider);
         updateModelBadge();
 
-        if (!State.apiKey) els.settingsModal.classList.remove('hidden');
+        if (!State.groqKey && !State.geminiKey) els.settingsModal.classList.remove('hidden');
 
         els.newChatBtn.onclick = () => loadChat(null);
         els.sendBtn.onclick = () => sendMessage(false);
         els.genImgBtn.onclick = () => sendMessage(true);
-        els.voiceBtn.onclick = () => {
-            if (State.voiceMode) {
-                exitVoiceMode();
-            } else {
-                enterVoiceMode();
-            }
-        };
+        els.voiceBtn.onclick = () => State.voiceMode ? exitVoiceMode() : enterVoiceMode();
         els.input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(false); } };
         els.uploadBtn.onclick = () => els.fileInput.click();
         els.fileInput.onchange = handleFileUpload;
         els.removeImgBtn.onclick = clearUpload;
         els.settingsBtn.onclick = () => {
-            els.apiKeyInput.value = State.apiKey;
-            els.sysPromptInput.value = State.systemPrompt;
+            els.groqApiKeyInput.value = State.groqKey;
+            els.geminiApiKeyInput.value = State.geminiKey;
+            els.providerSelect.value = State.provider;
+            updateModelOptions(State.provider);
             els.modelSelect.value = State.modelId;
+            els.sysPromptInput.value = State.systemPrompt;
             els.settingsModal.classList.remove('hidden');
+        };
+        els.providerSelect.onchange = () => {
+            const provider = els.providerSelect.value;
+            updateModelOptions(provider);
+            State.modelId = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gemini-2.5-flash';
+            els.modelSelect.value = State.modelId;
         };
         els.closeSettingsBtn.onclick = () => els.settingsModal.classList.add('hidden');
         els.saveSettingsBtn.onclick = () => {
-            State.apiKey = els.apiKeyInput.value.trim();
+            State.groqKey = els.groqApiKeyInput.value.trim();
+            State.geminiKey = els.geminiApiKeyInput.value.trim();
+            State.provider = els.providerSelect.value;
             State.systemPrompt = els.sysPromptInput.value.trim();
             State.modelId = els.modelSelect.value;
-            localStorage.setItem('lony_api_key', State.apiKey);
+            localStorage.setItem('lony_groq_key', State.groqKey);
+            localStorage.setItem('lony_gemini_key', State.geminiKey);
+            localStorage.setItem('lony_provider', State.provider);
             localStorage.setItem('lony_system_prompt', State.systemPrompt);
             localStorage.setItem('lony_model_id', State.modelId);
             updateModelBadge();
             els.settingsModal.classList.add('hidden');
-            alert("Settings saved! Ab message bhejo.");
+            alert("Settings saved!");
         };
         els.openSidebar.onclick = () => els.sidebar.classList.remove('-translate-x-full');
         els.closeSidebar.onclick = () => els.sidebar.classList.add('-translate-x-full');
-        els.clearDataBtn.onclick = () => { if (confirm("Sab delete?")) { localStorage.clear(); location.reload(); } };
+        els.clearDataBtn.onclick = () => confirm("Clear all data?") && (localStorage.clear(), location.reload());
 
         document.querySelectorAll('.welcome-prompt').forEach(btn => {
             btn.onclick = () => {
@@ -742,29 +783,15 @@ if (SpeechRecognition) {
         els.voiceSettings.onclick = els.settingsBtn.onclick;
         els.muteMic.onclick = () => {
             State.muteMic = !State.muteMic;
-            const icon = State.muteMic ? 'mic-off' : 'mic';
-            els.muteMic.innerHTML = `<i data-lucide="${icon}"></i>`;
-            lucide.createIcons({parent: els.muteMic});
-            if (State.muteMic) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
+            els.muteMic.innerHTML = `<i data-lucide="${State.muteMic ? 'mic-off' : 'mic'}"></i>`;
+            lucide.createIcons({ parent: els.muteMic });
+            if (State.muteMic) recognition.stop();
+            else recognition.start();
         };
         els.muteSpeaker.onclick = () => {
             State.muteSpeaker = !State.muteSpeaker;
-            const icon = State.muteSpeaker ? 'volume-x' : 'volume-2';
-            els.muteSpeaker.innerHTML = `<i data-lucide="${icon}"></i>`;
-            lucide.createIcons({parent: els.muteSpeaker});
-            if (State.muteSpeaker) {
-                speechSynthesis.cancel();
-            }
-        };
-        els.flipCamera.onclick = () => alert('Flip Camera not implemented');
-        els.toggleVideo.onclick = () => alert('Video not implemented');
-        els.refreshVoice.onclick = () => {
-            recognition.stop();
-            if (!State.muteMic) recognition.start();
+            els.muteSpeaker.innerHTML = `<i data-lucide="${State.muteSpeaker ? 'volume-x' : 'volume-2'}"></i>`;
+            lucide.createIcons({ parent: els.muteSpeaker });
         };
 
         resizeInput();
